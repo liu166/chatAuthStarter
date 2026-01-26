@@ -1,0 +1,3 @@
+auth:
+  jwtSecret: auth-secret-auth-secret-auth-secret-1234
+  expireHours: 2

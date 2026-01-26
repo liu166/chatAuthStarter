@@ -14,7 +14,7 @@ import java.util.List;
 @Component
 @ConfigurationProperties(prefix = "auth")
 public class AuthProperties {
-    private String jwtSecret = "auth-secret-auth-secret-auth-secret-1234";
+    private String jwtSecret = "";
     private int expireHours = 2;
     private List<String> excludes = new ArrayList<>();
 }
