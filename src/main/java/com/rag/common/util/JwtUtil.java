@@ -1,38 +1,53 @@
 package com.rag.common.util;
 
+import com.rag.common.config.AuthProperties;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jws;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
 import io.jsonwebtoken.security.Keys;
+import jakarta.annotation.PostConstruct;
+import org.springframework.stereotype.Component;
 
 import java.security.Key;
 import java.util.Date;
 
+@Component
 public class JwtUtil {
 
 
-    private static final String SECRET = "auth-secret-auth-secret-auth-secret-1234"; // 够长
-    private static final Key KEY = Keys.hmacShaKeyFor(SECRET.getBytes());
+    private final AuthProperties authProperties;
+    private Key key;
+    private long expireMs;
 
 
-    /** 生成 token，只存 sessionId */
-    public static String createToken(String sessionId) {
+    public JwtUtil(AuthProperties authProperties) {
+        this.authProperties = authProperties;
+    }
+
+
+    @PostConstruct
+    public void init() {
+        this.key = Keys.hmacShaKeyFor(authProperties.getJwtSecret().getBytes());
+        this.expireMs = authProperties.getExpireHours() * 3600_000L;
+    }
+
+
+    public String createToken(String sessionId) {
         return Jwts.builder()
                 .claim("sessionId", sessionId)
                 .setIssuedAt(new Date())
-                .setExpiration(new Date(System.currentTimeMillis() + 2 * 60 * 60 * 1000)) // 2h
-                .signWith(KEY, SignatureAlgorithm.HS256)
+                .setExpiration(new Date(System.currentTimeMillis() + expireMs))
+                .signWith(key, SignatureAlgorithm.HS256)
                 .compact();
     }
 
 
-    /** 解析 token */
-    public static Claims parseToken(String token) {
-        Jws<Claims> jws = Jwts.parserBuilder()
-                .setSigningKey(KEY)
+    public Claims parseToken(String token) {
+        return Jwts.parserBuilder()
+                .setSigningKey(key)
                 .build()
-                .parseClaimsJws(token);
-        return jws.getBody();
+                .parseClaimsJws(token)
+                .getBody();
     }
 }
