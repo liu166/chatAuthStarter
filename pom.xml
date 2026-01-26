@@ -6,7 +6,7 @@
 
     <groupId>com.rag</groupId>
     <artifactId>auth-spring-boot-starter</artifactId>
-    <version>1.0-SNAPSHOT</version>
+    <version>1.0.1</version>
     <packaging>jar</packaging>
     <name>Auth Spring Boot Starter</name>
     <properties>
@@ -27,7 +27,13 @@
             </dependency>
         </dependencies>
     </dependencyManagement>
-
+    <distributionManagement>
+        <repository>
+            <id>github</id>
+            <name>GitHub OWNER Apache Maven Packages</name>
+            <url>https://maven.pkg.github.com/liu166/chatAuthStarter</url>
+        </repository>
+    </distributionManagement>
 
     <dependencies>
         <!-- Spring Boot 自动配置 -->
