@@ -11,7 +11,6 @@ import java.util.List;
 
 @Getter
 @Setter
-@Component
 @ConfigurationProperties(prefix = "auth")
 public class AuthProperties {
     private String jwtSecret = "";

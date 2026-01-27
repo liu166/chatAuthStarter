@@ -28,7 +28,13 @@ public class JwtUtil {
 
     @PostConstruct
     public void init() {
-        this.key = Keys.hmacShaKeyFor(authProperties.getJwtSecret().getBytes());
+        String secret = authProperties.getJwtSecret();
+        if (secret == null || secret.length() < 32) {
+            throw new IllegalArgumentException(
+                    "auth.jwt-secret 长度必须 >= 32"
+            );
+        }
+        this.key = Keys.hmacShaKeyFor(secret.getBytes());
         this.expireMs = authProperties.getExpireHours() * 3600_000L;
     }
 
