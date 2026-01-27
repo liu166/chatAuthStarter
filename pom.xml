@@ -6,7 +6,7 @@
 
     <groupId>com.rag</groupId>
     <artifactId>auth-spring-boot-starter</artifactId>
-    <version>1.0.8</version>
+    <version>1.0.9</version>
     <packaging>jar</packaging>
     <name>Auth Spring Boot Starter</name>
     <properties>
