@@ -24,15 +24,6 @@ public class AuthAutoConfiguration {
 
     @Bean
     @ConditionalOnMissingBean
-    public RedisTemplate<String, Object> redisTemplate(
-            RedisConnectionFactory factory) {
-        RedisTemplate<String, Object> template = new RedisTemplate<>();
-        template.setConnectionFactory(factory);
-        return template;
-    }
-
-    @Bean
-    @ConditionalOnMissingBean
     public JwtUtil jwtUtil(AuthProperties authProperties) {
         return new JwtUtil(authProperties);
     }
