@@ -2,6 +2,7 @@ package com.rag.common.config;
 
 import com.rag.common.filter.JwtAuthFilter;
 import com.rag.common.util.JwtUtil;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.boot.autoconfigure.AutoConfiguration;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
@@ -16,7 +17,7 @@ public class AuthAutoConfiguration {
     @Bean
     @ConditionalOnMissingBean
     public JwtAuthFilter jwtAuthFilter(
-            RedisTemplate<?, ?> redisTemplate,
+            @Qualifier("redisTemplate") RedisTemplate<?, ?> redisTemplate,
             AuthProperties authProperties,
             JwtUtil jwtUtil) {
         return new JwtAuthFilter(redisTemplate, authProperties, jwtUtil);
