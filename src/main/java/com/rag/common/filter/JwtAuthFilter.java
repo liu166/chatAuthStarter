@@ -22,12 +22,12 @@ import java.util.Map;
 public class JwtAuthFilter extends OncePerRequestFilter {
 
 
-    private final RedisTemplate<String, Object> redisTemplate;
+    private final RedisTemplate<?, ?> redisTemplate;
     private final AuthProperties properties;
     private final JwtUtil jwtUtil;
 
 
-    public JwtAuthFilter(RedisTemplate<String, Object> redisTemplate,
+    public JwtAuthFilter(RedisTemplate<?, ?> redisTemplate,
                          AuthProperties properties,
                          JwtUtil jwtUtil) {
         this.redisTemplate = redisTemplate;
@@ -46,9 +46,12 @@ public class JwtAuthFilter extends OncePerRequestFilter {
         String path = request.getRequestURI();
 
 
-        if (properties.getExcludes().stream().anyMatch(path::startsWith)) {
-            chain.doFilter(request, response);
-            return;
+        List<String> excludes = properties.getExcludes();
+        if (excludes != null && !excludes.isEmpty()) {
+            if (excludes.stream().anyMatch(path::startsWith)) {
+                chain.doFilter(request, response);
+                return;
+            }
         }
 
 
