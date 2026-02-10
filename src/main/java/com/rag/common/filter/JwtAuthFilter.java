@@ -54,10 +54,19 @@ public class JwtAuthFilter extends OncePerRequestFilter {
             }
         }
 
+        // ✅ 关键修改1：处理OPTIONS请求
+        if ("OPTIONS".equalsIgnoreCase(request.getMethod())) {
+            chain.doFilter(request, response);
+            return;
+        }
+
 
         String header = request.getHeader(AuthConstants.AUTH_HEADER);
         if (header == null || !header.startsWith(AuthConstants.TOKEN_PREFIX)) {
+            // ✅ 关键修改2：认证失败也要继续过滤器链
             response.setStatus(401);
+            SecurityContextHolder.clearContext(); // 清理安全上下文
+            chain.doFilter(request, response); // ⚠️ 必须调用这个方法
             return;
         }
 
@@ -65,12 +74,15 @@ public class JwtAuthFilter extends OncePerRequestFilter {
         String token = header.substring(AuthConstants.TOKEN_PREFIX.length());
 
 
-// ⚡ 使用注入的 jwtUtil 而不是静态方法
+        // ⚡ 使用注入的 jwtUtil 而不是静态方法
         Claims claims;
         try {
             claims = jwtUtil.parseToken(token);
         } catch (Exception e) {
+            // ✅ 关键修改3：异常时也要继续过滤器链
             response.setStatus(401);
+            SecurityContextHolder.clearContext();
+            chain.doFilter(request, response);
             return;
         }
 
@@ -84,33 +96,45 @@ public class JwtAuthFilter extends OncePerRequestFilter {
 
 
         if (session == null) {
+            // ✅ 关键修改4：Redis中不存在也要继续过滤器链
             response.setStatus(401);
+            SecurityContextHolder.clearContext();
+            chain.doFilter(request, response);
             return;
         }
 
-
-        LoginUser loginUser = new LoginUser(
-                ((Number) session.get("userId")).longValue(),
-                (String) session.get("username"),
-                (List<String>) session.get("roles")
-        );
-
-
-        List<SimpleGrantedAuthority> authorities =
-                loginUser.getRoles().stream()
-                        .map(r -> new SimpleGrantedAuthority("ROLE_" + r))
-                        .toList();
+        // ✅ 关键修改5：确保这里不会抛出异常
+        try {
+            LoginUser loginUser = new LoginUser(
+                    ((Number) session.get("userId")).longValue(),
+                    (String) session.get("username"),
+                    (List<String>) session.get("roles")
+            );
 
 
-        UsernamePasswordAuthenticationToken auth =
-                new UsernamePasswordAuthenticationToken(
-                        loginUser,
-                        null,
-                        authorities
-                );
+            List<SimpleGrantedAuthority> authorities =
+                    loginUser.getRoles().stream()
+                            .map(r -> new SimpleGrantedAuthority("ROLE_" + r))
+                            .toList();
 
 
-        SecurityContextHolder.getContext().setAuthentication(auth);
+            UsernamePasswordAuthenticationToken auth =
+                    new UsernamePasswordAuthenticationToken(
+                            loginUser,
+                            null,
+                            authorities
+                    );
+
+
+            SecurityContextHolder.getContext().setAuthentication(auth);
+
+        } catch (Exception e) {
+            // ✅ 关键修改6：创建用户对象时异常也要处理
+            response.setStatus(401);
+            SecurityContextHolder.clearContext();
+        }
+
+        // ✅ 关键修改7：无论如何都要调用 chain.doFilter()
         chain.doFilter(request, response);
     }
 }
