@@ -43,6 +43,15 @@ public class JwtAuthFilter extends OncePerRequestFilter {
                                     FilterChain chain)
             throws IOException, ServletException {
 
+        String path = request.getRequestURI();
+        List<String> excludes = properties.getExcludes();
+        if (excludes != null && !excludes.isEmpty()) {
+            if (excludes.stream().anyMatch(path::startsWith)) {
+                chain.doFilter(request, response);
+                return;
+            }
+        }
+
         // 放行 OPTIONS
         if ("OPTIONS".equalsIgnoreCase(request.getMethod())) {
             chain.doFilter(request, response);
