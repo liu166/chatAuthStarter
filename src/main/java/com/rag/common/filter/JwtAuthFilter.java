@@ -8,6 +8,7 @@ import io.jsonwebtoken.Claims;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletRequestWrapper;
 import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -84,7 +85,16 @@ public class JwtAuthFilter extends OncePerRequestFilter {
 
             SecurityContextHolder.getContext().setAuthentication(auth);
 
-            chain.doFilter(request, response);
+            // 👇 关键：把 userId 放进 Reactor Context
+            chain.doFilter(new HttpServletRequestWrapper(request) {
+                @Override
+                public Object getAttribute(String name) {
+                    if ("USER_ID".equals(name)) {
+                        return loginUser.getUserId();
+                    }
+                    return super.getAttribute(name);
+                }
+            }, response);
 
         } catch (Exception e) {
             SecurityContextHolder.clearContext();
